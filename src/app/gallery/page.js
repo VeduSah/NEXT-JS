@@ -18,7 +18,7 @@ const GalleryPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('https://moves-backend-lyart.vercel.app/moves/gallery/all');
+        const response = await axios.get('https://nextjs-baclend-rpb5.vercel.app/moves/gallery/all');
         setGalleryItems(response.data.data);
         setFilteredItems(response.data.data);
       } catch (err) {

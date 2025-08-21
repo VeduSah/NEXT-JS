@@ -17,7 +17,7 @@ export default function Home() {
   // Fetch gallery data
   const fetchGalleryData = async () => {
     try {
-      const response = await axios.get("https://moves-backend-lyart.vercel.app/moves/gallery/all");
+      const response = await axios.get("https://nextjs-baclend-rpb5.vercel.app/moves/gallery/all");
       setGalleryItems(response.data.data || []);
     } catch (err) {
       setError(err.message);
@@ -53,7 +53,7 @@ export default function Home() {
   // Fetch news data
   const fetchNewsData = async () => {
     try {
-      const response = await axios.get("https://moves-backend-lyart.vercel.app/moves/news/all");
+      const response = await axios.get("https://nextjs-baclend-rpb5.vercel.app/moves/news/all");
       setNewsItems(response.data || []);
       console.log(response.data.data)
     } catch (err) {
