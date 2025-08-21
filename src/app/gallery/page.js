@@ -1,0 +1,238 @@
+'use client';
+
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import axios from "axios";
+import { Search, Filter, Calendar, ChevronDown, ArrowRight, Loader } from "lucide-react";
+
+const GalleryPage = () => {
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [activeFilter, setActiveFilter] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('https://moves-backend-lyart.vercel.app/moves/gallery/all');
+        setGalleryItems(response.data.data);
+        setFilteredItems(response.data.data);
+      } catch (err) {
+        setError(err.message);
+        console.error("Error fetching gallery data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Filter items based on search and category
+  useEffect(() => {
+    let result = galleryItems;
+    
+    // Apply search filter
+    if (searchQuery) {
+      result = result.filter(item => 
+        (item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    
+    // Apply category filter
+    if (selectedCategory !== "all") {
+      result = result.filter(item => item.category === selectedCategory);
+    }
+    
+    setFilteredItems(result);
+  }, [searchQuery, selectedCategory, galleryItems]);
+
+  // Extract unique categories for filter
+  const categories = ["all", ...new Set(galleryItems.map(item => item.category || "uncategorized").filter(Boolean))];
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Error</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-br from-blue-900 to-purple-800 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-black opacity-40"></div>
+        <div className="relative max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">Photo Gallery</h1>
+            <p className="text-xl max-w-3xl mx-auto mb-8">
+              Explore our collection of memorable moments captured through the lens
+            </p>
+           
+          </div>
+        </div>
+        
+        {/* Decorative elements */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg className="w-full h-16 text-white" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M0,0 L100,0 L100,15 L50,30 L0,15 Z" fill="currentColor"></path>
+          </svg>
+        </div>
+        
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <ChevronDown className="h-8 w-8 text-white opacity-70" />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+        {/* Intro Text */}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Captured Moments</h2>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            Browse through our collection of events, workshops, and special occasions that we've been proud to be a part of.
+          </p>
+        </div>
+
+        {/* Search and Filter Section */}
+        {activeFilter && (
+          <div className="flex flex-col md:flex-row gap-4 mb-12 p-6 bg-gray-50 rounded-xl transition-all duration-300">
+            <div className="relative w-full md:w-1/2">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search images by title, description or category..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <Filter className="text-gray-400 w-5 h-5" />
+              <select 
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition w-full"
+              >
+                {categories.map(category => (
+                  <option key={category} value={category}>
+                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden animate-pulse">
+                <div className="h-60 bg-gradient-to-r from-blue-50 to-purple-50"></div>
+                <div className="p-6">
+                  <div className="h-6 bg-gray-200 rounded mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                    <div className="h-4 w-16 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-center py-16 bg-gray-50 rounded-xl">
+            <div className="text-6xl mb-4">📸</div>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              {galleryItems.length === 0 ? "Gallery is empty" : "No images found"}
+            </h3>
+            <p className="text-gray-500 mb-6">
+              {galleryItems.length === 0 
+                ? "No images have been added to the gallery yet." 
+                : "No images match your search criteria."}
+            </p>
+            {(searchQuery || selectedCategory !== "all") && (
+              <button 
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("all");
+                }}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredItems.map((item) => (
+                <div key={item._id || item.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                  <div className="relative h-60 w-full overflow-hidden">
+                    <Image
+                      src={item.url}
+                      alt={item.alt || item.title || "Gallery image"}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                    {item.category && (
+                      <span className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-blue-800 text-xs font-medium px-3 py-1.5 rounded-full shadow-sm">
+                        {item.category}
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    {item.title && (
+                      <h3 className="font-semibold text-lg text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
+                        {item.title}
+                      </h3>
+                    )}
+                    {item.description && (
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {item.description}
+                      </p>
+                    )}
+                  
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Load More Button (optional) */}
+            {filteredItems.length > 9 && (
+              <div className="mt-12 text-center">
+                <button className="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm">
+                  Load More Images
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+      
+      </div>
+    </div>
+  );
+};
+
+export default GalleryPage;
